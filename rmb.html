@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>金钱计算器</title>
+<style>
+    /* 通用样式 */
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+      background: #f4f4f4;
+      margin: 0;
+    }
+    .calculator-container {
+      max-width: 500px;
+      background: #fff;
+      padding: 20px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+      margin: 20px auto;
+    }
+    input[type='number'], input[type='submit'] {
+      width: 100%;
+      padding: 10px;
+      margin: 10px 0;
+      box-sizing: border-box;
+    }
+    input[type='submit'] {
+      background-color: #5cb85c;
+      color: white;
+      border: 0;
+      cursor: pointer;
+    }
+    input[type='submit']:hover {
+      opacity: 0.9;
+    }
+    .result {
+      margin-top: 20px;
+      padding: 10px;
+      background: #e7f4e7;
+      border: 1px solid #d4edda;
+    }
+    .result p {
+      margin: 5px 0;
+      font-weight: bold;
+    }
+  
+    /* 媒体查询以适应不同屏幕尺寸 */
+    @media (max-width: 768px) {
+      body {
+        padding: 10px;
+      }
+      .calculator-container {
+        width: 100%;
+        box-shadow: none;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="calculator-container">
+    <h2>贷款计算器</h2>
+    <form id="loan-form">
+      <label for="amount">贷款金额 (万元):</label>
+      <input type="number" id="amount" placeholder="金额（万元）" required>
+
+      <label for="interest">年利率 (%):</label>
+      <input type="number" id="interest" placeholder="年利率" step="1.0" required>
+
+      <label for="months">期限 (月):</label>
+      <input type="number" id="months" placeholder="期限（月）" required>
+
+      <input type="submit" value="计算">
+    </form>
+
+    <div class="result" id="result"></div>
+  </div>
+
+  <script>
+    document.getElementById('loan-form').addEventListener('submit', function(e) {
+      e.preventDefault();
+
+      // 获取用户输入
+      var amount = document.getElementById('amount').value * 10000; // 转换为元
+      var interest = document.getElementById('interest').value / 100; // 年利率
+      var months = document.getElementById('months').value; // 期限（月）
+
+      // 计算单利总利息
+      var totalInterest = (amount * interest * months) / 12;
+      // 计算还款总额
+      var totalPayment = amount + totalInterest;
+      // 计算每期还款金额
+      var monthlyPayment = totalPayment / months;
+      
+      if (isFinite(monthlyPayment)) {
+        var resultElement = document.getElementById('result');
+        resultElement.innerHTML = `
+          <p>单利: ${(interest * 100).toFixed(2)}%</p>
+          <p>利息: ${totalInterest.toFixed(2)}元</p>
+          <p>还款: ${totalPayment.toFixed(2)}元</p>
+          <p>每期: ${monthlyPayment.toFixed(2)}元</p>
+          <p>本金: ${(amount).toFixed(2)}元</p>
+          <p>利息: ${totalInterest.toFixed(2)}元</p>
+        `;
+      } else {
+        alert('请检查你的输入！');
+      }
+    });
+  </script>
+</body>
+</html>
