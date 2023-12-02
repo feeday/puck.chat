@@ -21,7 +21,7 @@
       box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.2);
       margin: 10px;
     }
-    #videoInput, #intervalSecondsInput, #convertButton, .button {
+    #videoInput, #intervalSecondsInput, .button, .button2 {
       display: block;
       margin: 10px auto;
       padding: 10px;
@@ -57,7 +57,6 @@
       cursor: pointer;
       margin: 5px;
     }
-    
     .button2 {
       display: inline-block;
     }
@@ -65,39 +64,43 @@
 </head>
 <body>
   <div class="container">
-   
     <div id="imageDisplayContainer" class="image-display-container">
       <img id="displayedImage" src="" alt="Converted Image">
       <div id="imageTimeLabel" class="image-time"></div>
-
       <div class="button-container">
         <button id="prevButton" class="button">上秒</button>
         <button id="returnButton" class="button">清除</button>
         <button class="button" target="_blank" onclick="window.location.href='https://3g.gljlw.com/diy/douyin.php'">提取</button>
         <button id="nextButton" class="button">下秒</button>
       </div>
-
     </div>
     <input type="file" id="videoInput" accept="video/*">
     <input type="number" id="intervalSecondsInput" placeholder="请输入间隔秒数" value="1">
-    <button class="button2" id="convertButton">视频转图片按秒查看浏览</button>
-  
-    
-
+    <button class="button2" id="convertButton">视频转图片-按秒查看浏览</button>
   </div>
 
   <script>
     document.addEventListener('DOMContentLoaded', function() {
       var fileInput = document.getElementById('videoInput');
       var intervalSecondsInput = document.getElementById('intervalSecondsInput');
+      var convertButton = document.getElementById('convertButton');
+      var prevButton = document.getElementById('prevButton');
+      var nextButton = document.getElementById('nextButton');
+      var returnButton = document.getElementById('returnButton');
       var video;
       var images = [];
       var currentImageIndex = -1;
 
-      document.getElementById('convertButton').addEventListener('click', convertToImage);
-      document.getElementById('prevButton').addEventListener('click', showPreviousImage);
-      document.getElementById('nextButton').addEventListener('click', showNextImage);
-      document.getElementById('returnButton').addEventListener('click', resetUI);
+      convertButton.addEventListener('click', function() {
+        var startTime = Date.now();
+        convertButton.textContent = '转换中...';
+        convertToImage(startTime);
+      });
+
+  // 添加事件监听器
+  prevButton.addEventListener('click', showPreviousImage);
+  nextButton.addEventListener('click', showNextImage);
+  returnButton.addEventListener('click', resetUI);
 
       fileInput.addEventListener('change', function(e) {
         var file = e.target.files[0];
@@ -108,16 +111,25 @@
         createVideoElement(file);
       });
 
-      function convertToImage() {
-        var intervalSeconds = parseInt(intervalSecondsInput.value, 10);
-        if (!video || isNaN(intervalSeconds) || intervalSeconds <= 0) {
-          alert('请先选择一个视频并输入有效的间隔秒数。');
+      function convertToImage(startTime) {
+        if (!video) {
+          alert('请先选择一个视频文件');
           return;
         }
+
+        var intervalSeconds = parseInt(intervalSecondsInput.value, 10);
+        if (isNaN(intervalSeconds) || intervalSeconds <= 0) {
+          alert('请输入有效的间隔秒数。');
+          return;
+        }
+
         images = [];
         var currentTime = 0;
         function captureFrame() {
           if (currentTime >= video.duration) {
+            var endTime = Date.now();
+            var duration = ((endTime - startTime) / 1000).toFixed(2);
+            convertButton.textContent = '转换完成，用时: ' + duration + '秒';
             if (images.length > 0) {
               currentImageIndex = 0;
               updateImageDisplay();
@@ -126,6 +138,7 @@
             }
             return;
           }
+
           video.currentTime = currentTime;
           video.onseeked = function() {
             var canvas = document.createElement('canvas');
@@ -181,6 +194,9 @@
         document.getElementById('prevButton').style.display = 'none';
         document.getElementById('nextButton').style.display = 'none';
         document.getElementById('returnButton').style.display = 'none';
+        convertButton.textContent = '视频转图片按秒查看浏览';
+        images = [];
+        currentImageIndex = -1;
       }
 
       function secondsToTimeString(seconds) {
@@ -193,7 +209,6 @@
       function padZero(number) {
         return number < 10 ? '0' + number : number.toString();
       }
-
     });
   </script>
 </body>
