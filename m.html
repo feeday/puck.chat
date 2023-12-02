@@ -72,7 +72,8 @@
 
       <div class="button-container">
         <button id="prevButton" class="button">上一张</button>
-        <button id="returnButton" class="button">返回</button>
+        <button id="returnButton" class="button">清除</button>
+        <button class="button" target="_blank" onclick="window.location.href='https://3g.gljlw.com/diy/douyin.php'">提取</button>
         <button id="nextButton" class="button">下一张</button>
       </div>
 
@@ -80,7 +81,8 @@
     <input type="file" id="videoInput" accept="video/*">
     <input type="number" id="intervalSecondsInput" placeholder="请输入间隔秒数" value="1">
     <button class="button2" id="convertButton">视频转图片</button>
-    <button class="button2" onclick="extractVideo()">提取无水印视频</button>
+  
+    
 
   </div>
 
@@ -192,9 +194,6 @@
         return number < 10 ? '0' + number : number.toString();
       }
 
-      function extractVideo() {
-        window.open('https://3g.gljlw.com/diy/douyin.php', '_blank');
-      }
     });
   </script>
 </body>
