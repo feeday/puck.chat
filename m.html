@@ -5,251 +5,186 @@
   <link rel="shortcut icon" href="https://github.githubassets.com/favicons/favicon.svg">
   <title>视频转图片</title>
   <style>
-  body {
-    font-family: Arial, sans-serif;
-    margin: 0;
-    padding: 0;
-    background-color: #f4f4f4;
-  }
-
-  .container {
-    max-width: 100%;
-    padding: 20px;
-    text-align: center;
-    background-color: #ffffff;
-    border-radius: 10px;
-    box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.2);
-    margin: 10px;
-  }
-
-  #videoInput, #intervalSecondsInput, #convertButton, .button {
-    display: block;
-    margin: 10px auto;
-    padding: 10px;
-    width: 80%;
-    border: 1px solid #ccc;
-    border-radius: 5px;
-  }
-
-  #imageContainer {
-    margin-top: 20px;
-  }
-
-  .image {
-    max-width: 100%;
-    height: auto;
-    margin: 10px auto;
-    display: block;
-  }
-
-  .buttonContainer {
-    text-align: center;
-  }
-
-  .button, #downloadButton, #downloadAllButton {
-    margin-top: 20px;
-    padding: 10px 20px;
-    background-color: #007bff;
-    color: #ffffff;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-  }
-
-  #downloadAllButton {
-    display: none;
-  }
-</style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      background-color: #f4f4f4;
+    }
+    .container {
+      max-width: 100%;
+      padding: 20px;
+      text-align: center;
+      background-color: #ffffff;
+      border-radius: 10px;
+      box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.2);
+      margin: 10px;
+    }
+    #videoInput, #intervalSecondsInput, #convertButton, .button {
+      display: block;
+      margin: 10px auto;
+      padding: 10px;
+      width: 80%;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+    }
+    #imageDisplayContainer {
+      display: none;
+      text-align: center;
+      margin-bottom: 10px;
+    }
+    #displayedImage {
+      max-width: 100%;
+      height: auto;
+    }
+    .image-time {
+      margin-top: 5px;
+      font-size: 0.8em;
+      color: #666;
+    }
+    .button {
+      padding: 10px 20px;
+      background-color: #007bff;
+      color: #ffffff;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      display: none; /* Initially hide buttons */
+    }
+    .button2 {
+      padding: 10px 20px;
+      background-color: #007bff;
+      color: #ffffff;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      display:inline-block;
+    }
+  </style>
 </head>
 <body>
   <div class="container">
     <h1>视频转图片</h1>
-    <input type="file" id="videoInput" accept="video/mp4">
+    <input type="file" id="videoInput" accept="video/*">
     <input type="number" id="intervalSecondsInput" placeholder="请输入间隔秒数">
     <button id="convertButton">视频转图片</button>
-    <button class="button" target="_blank" onclick="window.location.href='https://3g.gljlw.com/diy/douyin.php'">提取无水印视频</button>
-     <div class="container">
-  <div id="imageDisplayContainer" class="image-display-container">
-    <img id="displayedImage" src="" alt="Converted Image">
-    <div id="imageTimeLabel" class="image-time"></div>
-  </div>
-  <button id="prevButton"  class="button" >上一张</button>
-  <button id="nextButton"  class="button" >下一张</button>
-  </div></div>
 
- <script>
+    <div id="imageDisplayContainer" class="image-display-container">
+      <img id="displayedImage" src="" alt="Converted Image">
+      <div id="imageTimeLabel" class="image-time"></div>
+    </div>
+    <button id="prevButton" class="button">上一张</button>
+    <button id="nextButton" class="button">下一张</button>
+    
+    <!-- 始终显示的按钮 -->
+    <button class="button2" onclick="extractVideo()">提取无水印视频</button>
+  </div>
+
+  <script>
     document.addEventListener('DOMContentLoaded', function() {
       var fileInput = document.getElementById('videoInput');
       var intervalSecondsInput = document.getElementById('intervalSecondsInput');
-      var imageContainer = document.getElementById('imageContainer');
-      var downloadAllButton = document.getElementById('downloadAllButton');
-
       var video;
       var images = [];
+      var currentImageIndex = -1;
+
+      document.getElementById('convertButton').addEventListener('click', convertToImage);
+      document.getElementById('prevButton').addEventListener('click', showPreviousImage);
+      document.getElementById('nextButton').addEventListener('click', showNextImage);
 
       fileInput.addEventListener('change', function(e) {
         var file = e.target.files[0];
-        var objectURL = URL.createObjectURL(file);
-
-        video = document.createElement('video');
-        video.src = objectURL;
-        video.preload = 'metadata';
-
-        video.onloadedmetadata = function() {
-          imageContainer.innerHTML = '';
-          downloadAllButton.style.display = 'none';
-        };
-
-        video.load();
+        if (!file || !file.type.startsWith('video/')) {
+          alert('请选择一个视频文件。');
+          return;
+        }
+        createVideoElement(file);
       });
 
       function convertToImage() {
-        if (!video) {
-          imageContainer.innerHTML = '请先选择一个视频文件';
-          return;
-        }
-
         var intervalSeconds = parseInt(intervalSecondsInput.value, 10);
-        if (isNaN(intervalSeconds) || intervalSeconds <= 0 || intervalSeconds > video.duration) {
-          imageContainer.innerHTML = '无效的间隔秒数';
+        if (!video || isNaN(intervalSeconds) || intervalSeconds <= 0) {
+          alert('请先选择一个视频并输入有效的间隔秒数。');
           return;
         }
-
         images = [];
         var currentTime = 0;
-
         function captureFrame() {
           if (currentTime >= video.duration) {
-            displayImages();
+            if (images.length > 0) {
+              currentImageIndex = 0;
+              updateImageDisplay();
+            } else {
+              alert('未能从视频中提取任何图片。');
+            }
             return;
           }
-
           video.currentTime = currentTime;
           video.onseeked = function() {
             var canvas = document.createElement('canvas');
             canvas.width = video.videoWidth;
             canvas.height = video.videoHeight;
-
             var ctx = canvas.getContext('2d');
             ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-
-            var imageUrl = canvas.toDataURL();
-            images.push({ url: imageUrl, time: currentTime });
+            images.push({ url: canvas.toDataURL(), time: currentTime });
             currentTime += intervalSeconds;
             captureFrame();
           };
         }
-
         captureFrame();
-        imageContainer.innerHTML = '正在处理，请稍候...';
       }
 
-      function displayImages() {
-        imageContainer.innerHTML = '';
+      function createVideoElement(file) {
+        var objectURL = URL.createObjectURL(file);
+        video = document.createElement('video');
+        video.src = objectURL;
+        video.load();
+      }
 
-        for (var i = 0; i < images.length; i++) {
-          var imageElement = document.createElement('img');
-          imageElement.src = images[i].url;
-          imageElement.classList.add('image');
-          
-          imageElement.addEventListener('click', function(url) {
-            return function() {
-              var newWindow = window.open('', '_blank');
-              newWindow.document.write('<img src="' + url + '">');
-            }
-          }(images[i].url));
-          
-          imageContainer.appendChild(imageElement);
+      function updateImageDisplay() {
+        var imageContainer = document.getElementById('imageDisplayContainer');
+        var displayedImage = document.getElementById('displayedImage');
+        var imageTimeLabel = document.getElementById('imageTimeLabel');
+        if (currentImageIndex >= 0 && currentImageIndex < images.length) {
+          displayedImage.src = images[currentImageIndex].url;
+          imageTimeLabel.textContent = `时间: ${secondsToTimeString(images[currentImageIndex].time)}`;
+          imageContainer.style.display = 'block';
+          document.getElementById('prevButton').style.display = 'inline';
+          document.getElementById('nextButton').style.display = 'inline';
         }
-
-        downloadAllButton.style.display = 'block';
-        downloadAllButton.addEventListener('click', function() {
-          var counter = 0;
-
-          for (var i = 0; i < images.length; i++) {
-            var link = document.createElement('a');
-            var timeString = secondsToTimeString(images[i].time);
-            link.download = getFileNameWithoutExtension(fileInput.files[0].name) + '_' + timeString + '.png';
-            link.href = images[i].url;
-            link.style.display = 'none';
-            document.body.appendChild(link);
-            link.click();
-
-            link.onload = function() {
-              counter++;
-
-              if (counter === images.length) {
-                document.body.removeChild(link);
-              }
-            };
-          }
-        });
       }
 
-function displayImages() {
-    imageContainer.innerHTML = '';
-    images.forEach(function(image, index) {
-      var imgElement = document.createElement('img');
-      imgElement.src = image.url;
-      imgElement.classList.add('image');
-      imageContainer.appendChild(imgElement);
-    });
-    downloadAllButton.style.display = 'block';
-  }
+      function showPreviousImage() {
+        if (currentImageIndex > 0) {
+          currentImageIndex--;
+          updateImageDisplay();
+        }
+      }
 
-  function extractVideo() {
-    window.open('https://3g.gljlw.com/diy/douyin.php', '_blank');
-  }
-  
-  var currentImageIndex = -1;
-
-document.getElementById('prevButton').addEventListener('click', function() {
-  if (currentImageIndex > 0) {
-    currentImageIndex--;
-    updateImageDisplay();
-  }
-});
-
-document.getElementById('nextButton').addEventListener('click', function() {
-  if (currentImageIndex < images.length - 1) {
-    currentImageIndex++;
-    updateImageDisplay();
-  }
-});
-
-function updateImageDisplay() {
-  if (currentImageIndex >= 0 && currentImageIndex < images.length) {
-    document.getElementById('displayedImage').src = images[currentImageIndex].url;
-    document.getElementById('imageTimeLabel').textContent = `时间: ${secondsToTimeString(images[currentImageIndex].time)}`;
-  }
-}
-
-function displayImages() {
-  currentImageIndex = 0; // Reset to the first image
-  updateImageDisplay();
-}
-
-      
-      function getFileNameWithoutExtension(fileName) {
-        return fileName.split('.').slice(0, -1).join('.');
+      function showNextImage() {
+        if (currentImageIndex < images.length - 1) {
+          currentImageIndex++;
+          updateImageDisplay();
+        }
       }
 
       function secondsToTimeString(seconds) {
         var hours = Math.floor(seconds / 3600);
         var minutes = Math.floor((seconds % 3600) / 60);
         var remainingSeconds = Math.floor(seconds % 60);
-
-        return padZero(hours) + '_' + padZero(minutes) + '_' + padZero(remainingSeconds);
+        return `${padZero(hours)}:${padZero(minutes)}:${padZero(remainingSeconds)}`;
       }
 
       function padZero(number) {
-        return (number < 10 ? '0' : '') + number;
+        return number < 10 ? '0' + number : number.toString();
       }
 
-      var convertButton = document.getElementById('convertButton');
-      convertButton.addEventListener('click', convertToImage);
+      function extractVideo() {
+        window.open('https://3g.gljlw.com/diy/douyin.php', '_blank');
+      }
     });
-  </script><script charset="UTF-8" id="LA_COLLECT" src="./m_files/js-sdk-pro.min.js.下载"></script>
+  </script>
+  <script charset="UTF-8" id="LA_COLLECT" src="./m_files/js-sdk-pro.min.js.下载"></script>
 <script>LA.init({id:"JRHGRBPWC7lJIaXq",ck:"JRHGRBPWC7lJIaXq"})</script>
 
 
