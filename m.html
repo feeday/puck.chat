@@ -116,6 +116,7 @@
       var video;
       var images = [];
       var currentImageIndex = -1;
+      var totalFrames = 0;
 
       convertButton.addEventListener('click', function () {
         var startTime = Date.now();
@@ -167,7 +168,7 @@
           if (currentTime >= video.duration) {
             var endTime = Date.now();
             var duration = ((endTime - startTime) / 1000).toFixed(2);
-            convertButton.textContent = '转换完成，用时: ' + duration + '秒';
+            convertButton.textContent = '转换完成，用时: ' + duration + '秒，总帧数: ' + totalFrames; // 显示总帧数
             if (images.length > 0) {
               currentImageIndex = 0;
               updateImageDisplay();
@@ -186,7 +187,7 @@
             ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
             images.push({ url: canvas.toDataURL(), time: currentTime });
             currentTime += frameDuration; // 更新 currentTime 为下一帧
-
+            totalFrames++; // 每处理一帧，计数器加一
             captureFrame();
           };
         }
