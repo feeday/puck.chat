@@ -114,11 +114,11 @@
                 <option value="24">24 月</option>
                 <option value="36">36 月</option>
                 <option value="60">60 月</option>
+                <option value="360">30 年 商贷利率</option>
             </select>
 
 
             <input type="submit" value="金钱计算器" class="button">
-            <button class="button" onclick="window.open('https://weixin.gjj.beijing.gov.cn/weixin/funcrouter?token=Y2RjYmJjNWE0YzkwNDc4MWJlZmUzYTFmN2EyNWYxNDAyNWI1MjRiNTVmODk0NmQ0OTUwM2I0YjFkODZmNWJjYTE3MDE1OTY5MjkyNjM&state=gh_d7dfe024a186.loan_cal&o3ioNxEQrqXmvfA6_92oc3rnM0Q8=', '_blank')">商贷公积金</button>
             <button class="button" onclick="window.open('./m.html')">视频转图片</button>
 
         </form>
@@ -169,7 +169,8 @@
                 '1.55': '12',
                 '1.85': '24',
                 '2.2': '36',
-                '2.25': '60'
+                '2.25': '60',
+                '4.9': '360'
             };
 
             // 定义月份到利率的映射
@@ -180,7 +181,8 @@
                 '12': '1.55',
                 '24': '1.85',
                 '36': '2.2',
-                '60': '2.25'
+                '60': '2.25',
+                '360': '4.9'
             };
 
             interestInput.addEventListener('input', function () {
