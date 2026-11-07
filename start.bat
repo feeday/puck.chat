@@ -44,17 +44,21 @@ if exist ".env" (
 if not defined PUCK_PORT set "PUCK_PORT=3000"
 
 rem Add a Windows Firewall rule for trusted Private networks.
-set "FIREWALL_RULE=Puck Chat LAN TCP %PUCK_PORT%"
+set "FIREWALL_RULE=PuckChatLAN-%PUCK_PORT%"
 netsh advfirewall firewall show rule name="%FIREWALL_RULE%" >nul 2>&1
 if errorlevel 1 (
-    echo [INFO] Checking Windows Firewall access for Private networks...
+    echo [INFO] Adding Windows Firewall access for Private networks...
     netsh advfirewall firewall add rule name="%FIREWALL_RULE%" dir=in action=allow protocol=TCP localport=%PUCK_PORT% profile=private >nul 2>&1
     if errorlevel 1 (
-        echo [WARN] Could not add the firewall rule automatically. Administrator permission may be required.
-        echo Open PowerShell as Administrator and run:
-        echo netsh advfirewall firewall add rule name="%FIREWALL_RULE%" dir=in action=allow protocol=TCP localport=%PUCK_PORT% profile=private
+        echo [INFO] Administrator approval is required. Windows may show a UAC prompt.
+        powershell -NoProfile -ExecutionPolicy Bypass -Command "$p=Start-Process -FilePath 'netsh.exe' -Verb RunAs -Wait -PassThru -ArgumentList 'advfirewall firewall add rule name=%FIREWALL_RULE% dir=in action=allow protocol=TCP localport=%PUCK_PORT% profile=private'; if($p){exit $p.ExitCode}else{exit 1}" >nul 2>&1
+    )
+    if errorlevel 1 (
+        echo [WARN] Firewall rule was not added. LAN access may be blocked by Windows Firewall.
+        echo Run PowerShell as Administrator and execute:
+        echo netsh advfirewall firewall add rule name=%FIREWALL_RULE% dir=in action=allow protocol=TCP localport=%PUCK_PORT% profile=private
     ) else (
-        echo [OK] Windows Firewall rule added for Private networks.
+        echo [OK] Windows Firewall rule is enabled for Private networks.
     )
 ) else (
     echo [OK] Windows Firewall rule already exists.
