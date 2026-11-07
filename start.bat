@@ -26,10 +26,16 @@ if not exist "node_modules\express\package.json" (
 if not exist ".env" (
     if exist ".env.example" (
         copy /Y ".env.example" ".env" >nul
-        powershell -NoProfile -ExecutionPolicy Bypass -Command "$p='.env'; $s=Get-Content -Raw -LiteralPath $p; $s=$s -replace '(?m)^HOST=0\.0\.0\.0\s*$', 'HOST=127.0.0.1'; [System.IO.File]::WriteAllText((Resolve-Path $p), $s, [System.Text.Encoding]::ASCII)"
         echo [OK] Created local .env
     )
 )
+
+rem Make the Node server reachable from other devices on the local network.
+if exist ".env" (
+    node -e "const fs=require('fs');const p='.env';let s=fs.readFileSync(p,'utf8');if(/^\s*HOST\s*=/m.test(s)){s=s.replace(/^\s*HOST\s*=.*$/m,'HOST=0.0.0.0')}else{s=s.replace(/\s*$/,'')+'\r\nHOST=0.0.0.0\r\n'}fs.writeFileSync(p,s,'utf8');"
+    if errorlevel 1 echo [WARN] Could not update HOST in .env. The server process will still use HOST=0.0.0.0.
+)
+set "HOST=0.0.0.0"
 
 set "PUCK_PORT=3000"
 if exist ".env" (
@@ -37,11 +43,46 @@ if exist ".env" (
 )
 if not defined PUCK_PORT set "PUCK_PORT=3000"
 
+rem Add a Windows Firewall rule for trusted Private networks.
+set "FIREWALL_RULE=Puck Chat LAN TCP %PUCK_PORT%"
+netsh advfirewall firewall show rule name="%FIREWALL_RULE%" >nul 2>&1
+if errorlevel 1 (
+    echo [INFO] Checking Windows Firewall access for Private networks...
+    netsh advfirewall firewall add rule name="%FIREWALL_RULE%" dir=in action=allow protocol=TCP localport=%PUCK_PORT% profile=private >nul 2>&1
+    if errorlevel 1 (
+        echo [WARN] Could not add the firewall rule automatically. Administrator permission may be required.
+        echo Open PowerShell as Administrator and run:
+        echo netsh advfirewall firewall add rule name="%FIREWALL_RULE%" dir=in action=allow protocol=TCP localport=%PUCK_PORT% profile=private
+    ) else (
+        echo [OK] Windows Firewall rule added for Private networks.
+    )
+) else (
+    echo [OK] Windows Firewall rule already exists.
+)
+
+set "LAN_IP="
+for /f "tokens=2 delims=:" %%A in ('ipconfig ^| findstr /R /C:"IPv4.*"') do if not defined LAN_IP set "LAN_IP=%%A"
+set "LAN_IP=%LAN_IP: =%"
+if "%LAN_IP:~0,4%"=="127." set "LAN_IP="
+if "%LAN_IP:~0,8%"=="169.254." set "LAN_IP="
+
+echo.
 echo [OK] Node.js:
 node -v
-echo [INFO] Starting server at http://127.0.0.1:%PUCK_PORT%
-echo [INFO] Keep this window open while using Puck Chat.
-echo [INFO] Press Ctrl+C to stop the server.
+echo.
+echo ==========================================
+echo Puck Chat is starting
+echo ==========================================
+echo [LOCAL] This PC: http://127.0.0.1:%PUCK_PORT%
+if defined LAN_IP (
+    echo [LAN]   Other devices: http://%LAN_IP%:%PUCK_PORT%
+) else (
+    echo [LAN]   Could not detect a LAN IPv4 address. Check ipconfig.
+)
+echo.
+echo [INFO] Other devices must be connected to the same Wi-Fi/router.
+echo [INFO] If Windows asks about network access, allow Private networks.
+echo [INFO] Keep this window open. Press Ctrl+C to stop the server.
 echo.
 
 start "" /b powershell -NoProfile -WindowStyle Hidden -Command "$u='http://127.0.0.1:%PUCK_PORT%/api/health'; for($i=0;$i -lt 45;$i++){try{Invoke-WebRequest -UseBasicParsing -Uri $u -TimeoutSec 1 | Out-Null; Start-Process 'http://127.0.0.1:%PUCK_PORT%/'; exit}catch{Start-Sleep -Seconds 1}}"
