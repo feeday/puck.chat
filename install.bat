@@ -56,7 +56,7 @@ if not exist ".env" (
     if exist ".env.example" (
         copy /Y ".env.example" ".env" >nul
         echo [OK] Created .env from .env.example
-        powershell -NoProfile -ExecutionPolicy Bypass -Command "$p='.env'; $s=Get-Content -Raw -LiteralPath $p; $s=$s -replace '(?m)^HOST=0\.0\.0\.0\s*$', 'HOST=127.0.0.1'; [System.IO.File]::WriteAllText((Resolve-Path $p), $s, [System.Text.Encoding]::ASCII)"
+        echo [OK] .env created with LAN-capable HOST=0.0.0.0
     ) else (
         echo [WARN] .env.example was not found. The server will use its defaults.
     )
