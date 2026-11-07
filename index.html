@@ -52,41 +52,53 @@ html.wechat-client #externalSearchBtn .wechat-search-label{display:inline!import
 @media(max-width:420px){.speech-settings .speech-config-grid{grid-template-columns:1fr}.speech-inline #btnMic{width:100%}}
 
 
-/* PC 宽屏布局：只在桌面断点生效，移动端原有样式不变 */
+/* PC 桌面布局 v2：按真实 DOM 直接子元素分区，移动端样式不参与 */
 @media (min-width: 900px) {
+  html, body {
+    width: 100%;
+    max-width: none;
+  }
+
   body {
-    padding: 24px clamp(18px, 2.2vw, 40px);
+    padding: 22px clamp(16px, 2.2vw, 36px);
   }
 
   .app-container {
     width: 100%;
-    max-width: 1680px;
+    max-width: 1720px;
+    min-width: 0;
     margin: 0 auto;
+    padding-bottom: 28px;
     display: grid;
-    grid-template-columns: minmax(0, 1.08fr) minmax(390px, .92fr);
-    column-gap: 20px;
-    row-gap: 18px;
+    grid-template-columns: minmax(0, 1.12fr) minmax(340px, .88fr);
+    grid-template-areas:
+      "editor tools"
+      "audio audio"
+      "viewport viewport"
+      "config speech"
+      "search upload";
+    gap: 18px 20px;
     align-items: start;
   }
 
-  .app-container > .card {
-    margin-bottom: 0;
-    min-width: 0;
-  }
-
-  /* 输入面板与工具面板并排 */
+  /* 顶部：左侧输入编辑，右侧常用工具 */
   .app-container > .card:nth-of-type(1) {
-    grid-column: 1;
-    grid-row: 1;
+    grid-area: editor;
+    min-width: 0;
+    margin: 0;
+    width: 100%;
   }
 
   .app-container > .card:nth-of-type(2) {
-    grid-column: 2;
-    grid-row: 1;
+    grid-area: tools;
+    min-width: 0;
+    margin: 0;
+    width: 100%;
   }
 
   #universalText {
-    min-height: 280px;
+    min-height: clamp(260px, 30vh, 420px);
+    margin-bottom: 10px;
   }
 
   #stats {
@@ -96,48 +108,29 @@ html.wechat-client #externalSearchBtn .wechat-search-label{display:inline!import
 
   #mainToolsGrid {
     grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
-    gap: 10px;
+    gap: 9px;
   }
 
   #mainToolsGrid .btn {
+    min-width: 0;
     min-height: 40px;
-    padding: 8px 6px;
+    padding: 8px 5px;
     font-size: 12px;
-    letter-spacing: .3px;
     line-height: 1.4;
+    letter-spacing: 0;
+    overflow-wrap: anywhere;
   }
 
   #response {
-    max-height: 480px;
+    max-height: 460px;
   }
 
-  /* 音频工作台、媒体预览和配置区域使用完整宽度 */
-  .app-container > #audioLabCard,
-  .app-container > #viewportCard,
-  .app-container > .footer-banner,
-  .app-container > .speech-settings {
-    grid-column: 1 / -1;
-  }
-
+  /* 音频工作台：展开时单独占满一行；收起时不占空间 */
   .app-container > #audioLabCard {
+    grid-area: audio;
+    width: 100%;
     min-width: 0;
-  }
-
-  #viewportCard .ping-chart-wrap {
-    height: 170px;
-  }
-
-  #mediaPreview {
-    display: grid !important;
-    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-    gap: 16px;
-    align-items: start;
-  }
-
-  #displayedImage,
-  #modifiedImage {
-    max-height: 75vh;
-    object-fit: contain;
+    margin: 0;
   }
 
   #audioLabCard .audio-wave {
@@ -152,98 +145,170 @@ html.wechat-client #externalSearchBtn .wechat-search-label{display:inline!import
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 
-  /* 底部模型配置与搜索/文件上传并排 */
-  .footer-banner {
-    display: grid;
-    grid-template-columns: minmax(260px, .8fr) minmax(0, 1.2fr);
-    gap: 12px 18px;
+  /* 网络状态、图片/视频预览统一放在主内容下方 */
+  .app-container > #viewportCard {
+    grid-area: viewport;
+    width: 100%;
+    min-width: 0;
+    margin: 0;
+  }
+
+  #viewportCard .ping-chart-wrap {
+    height: 190px;
+  }
+
+  #imageDisplayContainer,
+  #mediaPreview {
+    width: 100%;
+    min-width: 0;
+  }
+
+  #mediaPreview {
+    display: grid !important;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 16px;
     align-items: start;
-    margin-top: 0;
+  }
+
+  #displayedImage,
+  #modifiedImage {
+    max-width: 100%;
+    max-height: 72vh;
+    object-fit: contain;
+  }
+
+  /* API Key 与模型选择：同一配置卡片内左右排列 */
+  .app-container > .footer-banner {
+    grid-area: config;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+    align-items: center;
+    width: 100%;
+    min-width: 0;
+    margin: 0;
+    padding: 14px;
     text-align: left;
     overflow: visible;
+    border: 1px solid #333;
+    background: rgba(10, 10, 10, .8);
+    border-radius: 8px;
   }
 
   .footer-banner > #apiKey,
   .footer-banner > #unifiedModel {
-    grid-column: 1;
+    grid-column: auto;
+    grid-row: auto;
     width: 100%;
     min-width: 0;
-  }
-
-  .footer-banner > #apiKey {
-    grid-row: 1;
-  }
-
-  .footer-banner > #unifiedModel {
-    grid-row: 2;
-  }
-
-  .footer-banner > .search-wrapper,
-  .footer-banner > #universalFile {
-    grid-column: 2;
-    width: 100%;
-    min-width: 0;
-  }
-
-  .footer-banner > .search-wrapper {
-    grid-row: 1;
-    margin-bottom: 0;
-  }
-
-  .footer-banner > #universalFile {
-    grid-row: 2;
-    margin-bottom: 0;
+    margin: 0;
   }
 
   .footer-banner .input-style {
     min-width: 0;
+    max-width: 100%;
+  }
+
+  /* 语音配置是 app-container 的独立卡片，不嵌套在 footer-banner */
+  .app-container > .card.speech-settings {
+    grid-area: speech;
+    width: 100%;
+    min-width: 0;
+    margin: 0;
+  }
+
+  .speech-settings details {
+    min-width: 0;
   }
 
   .speech-settings .speech-config-grid {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px 12px;
   }
 
   .speech-settings .input-style {
-    font-size: 13px;
+    width: 100%;
+    min-width: 0;
+    margin: 6px 0 8px;
+    font-size: 12px;
+  }
+
+  /* 搜索与文件上传是 app-container 的独立子元素，明确放在同一行 */
+  .app-container > .search-wrapper {
+    grid-area: search;
+    width: 100%;
+    min-width: 0;
+    margin: 0;
+  }
+
+  .app-container > #universalFile {
+    grid-area: upload;
+    display: block;
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
+    min-height: 44px;
+    margin: 0;
   }
 }
 
-/* 中等宽度电脑：适当收窄按钮列和语音配置列 */
-@media (min-width: 900px) and (max-width: 1100px) {
+/* 常见笔记本宽度：减少列数，避免按钮和配置挤压 */
+@media (min-width: 900px) and (max-width: 1199px) {
   .app-container {
-    grid-template-columns: minmax(0, 1fr) minmax(360px, .95fr);
-    column-gap: 16px;
-    row-gap: 16px;
+    grid-template-columns: minmax(0, 1.05fr) minmax(320px, .95fr);
+    gap: 14px;
+  }
+
+  .app-container > .card {
+    padding: 14px;
   }
 
   #mainToolsGrid {
     grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    gap: 8px;
+  }
+
+  #mainToolsGrid .btn {
+    font-size: 11px;
+    padding: 8px 3px;
+  }
+
+  .app-container > .footer-banner {
+    grid-template-columns: minmax(0, 1fr);
   }
 
   .speech-settings .speech-config-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
-  .footer-banner {
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr);
-    gap: 10px 14px;
+  #viewportCard .ping-chart-wrap {
+    height: 160px;
   }
 }
 
-/* 大屏显示器：进一步放宽内容区与工具按钮列 */
-@media (min-width: 1440px) {
+/* 宽屏显示器：增加编辑区与工具区空间，减少按钮换行 */
+@media (min-width: 1500px) {
   .app-container {
-    grid-template-columns: minmax(0, 1.12fr) minmax(440px, .88fr);
-    column-gap: 24px;
-    row-gap: 20px;
-  }
-
-  #universalText {
-    min-height: 340px;
+    grid-template-columns: minmax(0, 1.18fr) minmax(420px, .82fr);
+    gap: 20px 24px;
   }
 
   #mainToolsGrid {
     grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
+    gap: 10px;
+  }
+
+  #mainToolsGrid .btn {
+    min-height: 42px;
+    font-size: 12px;
+  }
+
+  .speech-settings .speech-config-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  #viewportCard .ping-chart-wrap {
+    height: 210px;
   }
 }
 
