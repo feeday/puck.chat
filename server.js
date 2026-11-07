@@ -264,6 +264,7 @@ asrWss.on('connection', (client, req) => {
   let upstream = null;
   let started = false;
   let stopRequested = false;
+  let finalSent = false;
   let ended = false;
   let lastText = '';
   let stopTimer = null;
@@ -296,10 +297,12 @@ asrWss.on('connection', (client, req) => {
   }
 
   function sendLastPacket() {
+    if (finalSent) return;
     if (!upstream || upstream.readyState !== WebSocket.OPEN) {
       stopRequested = true;
       return;
     }
+    finalSent = true;
     if (stopTimer) clearTimeout(stopTimer);
     upstream.send(buildAsrAudioFrame(Buffer.alloc(0), true), { binary: true });
     stopTimer = setTimeout(() => finish(lastText, 'final-timeout'), 12_000);
