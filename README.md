@@ -28,16 +28,36 @@ Puck Chat 是一个以单页前端和 Node.js 语音中转服务组成的 AI 对
 - 网络连通性延迟图表、搜索快捷入口、IP 信息卡片。
 - 保留原 wxm 的微信内精简布局和窄屏样式。
 
-## 本地启动
+## Windows 11 一键安装与启动
 
-环境要求：Node.js 20 或更高版本、npm。
+仓库提供三个批处理文件，适合 Windows 11 本地运行：
 
-1. 安装依赖：npm install
-2. 复制环境变量模板：将 .env.example 复制为 .env
-3. 启动：npm start
-4. 打开 http://localhost:3000
+| 文件 | 用途 |
+|---|---|
+| `install.bat` | 首次安装：检查 Node.js 20+，缺少时尝试通过 winget 安装 Node.js LTS，安装 npm 依赖，创建本地 .env，然后启动网站 |
+| `start.bat` | 日常启动：检查运行环境，必要时补装依赖，启动服务并在服务就绪后自动打开浏览器 |
+| `update.bat` | 更新代码：执行 git pull --ff-only、npm install 和 server.js 语法检查；保留已有 .env |
 
-PowerShell 可使用 Copy-Item .env.example .env。需要实时语音识别时，请允许浏览器访问麦克风。
+**首次使用：**
+
+1. 安装 Git for Windows（如果尚未安装）：https://git-scm.com/download/win
+2. 安装或确认已安装 Node.js 20+；`install.bat` 可在 winget 可用时自动安装 Node.js LTS。
+3. 克隆仓库：
+   ```powershell
+   git clone https://github.com/feeday/puck.chat.git
+   cd puck.chat
+   ```
+4. 双击 `install.bat`，等待依赖安装完成，网站会自动启动。
+5. 浏览器打开 `http://127.0.0.1:3000`。
+
+**以后使用：** 双击 `start.bat` 启动；需要拉取 GitHub 最新版本时，先关闭正在运行的服务，再双击 `update.bat`，完成后运行 `start.bat`。
+
+说明：
+- 如果没有 winget，或自动安装 Node.js 失败，请从 https://nodejs.org/ 安装 Node.js 20 LTS 或更新版本，然后重新运行 `install.bat`。
+- 首次安装会从 `.env.example` 创建 `.env`，并将本机监听地址设为 `127.0.0.1`；已有 `.env` 不会被覆盖。
+- `update.bat` 仅适用于通过 `git clone` 获取的仓库目录；下载 ZIP 的用户请重新下载最新 ZIP。
+- 运行期间请勿关闭启动窗口；按 Ctrl+C 停止服务。
+- 需要实时语音识别时，请在浏览器中允许麦克风权限。
 
 ## 豆包语音配置
 
