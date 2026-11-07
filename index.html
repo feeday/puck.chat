@@ -194,10 +194,10 @@ async function startAsr(){
  try{
   asrMediaStream=await navigator.mediaDevices.getUserMedia({audio:{channelCount:1,echoCancellation:true,noiseSuppression:true,autoGainControl:true}});
   const scheme=location.protocol==='https:'?'wss://':'ws://';asrSocket=new WebSocket(scheme+location.host+'/api/asr/ws');asrSocket.binaryType='arraybuffer';
-  asrSocket.onopen=()=>{if(asrSocket)asrSocket.send(JSON.stringify({type:'start',apiKey:saveField('asrApiKey')||saveField('ttsApiKey'),resourceId:saveField('asrResourceId')||'volc.seedasr.sauc.duration'}))};
+  asrSocket.onopen=()=>{if(asrSocket){asrSocket.send(JSON.stringify({type:'start',apiKey:saveField('asrApiKey')||saveField('ttsApiKey'),resourceId:saveField('asrResourceId')||'volc.seedasr.sauc.duration'}));if(asrStopping)asrSocket.send(JSON.stringify({type:'stop'}))}};
   asrSocket.onmessage=async event=>{
    let message;try{message=JSON.parse(event.data)}catch{return}
-   if(message.type==='ready'){if(asrStopping){if(asrSocket&&asrSocket.readyState===WebSocket.OPEN)asrSocket.send(JSON.stringify({type:'stop'}));return}try{await beginMicCapture()}catch(error){failAsr(error.message)}}
+   if(message.type==='ready'){if(asrStopping)return;try{await beginMicCapture()}catch(error){failAsr(error.message)}}
    else if(message.type==='result'){asrCurrentText=message.text||asrCurrentText;if(message.final)asrFinalText=message.text||asrCurrentText;$('asrLiveText').textContent=asrCurrentText;asrStatus(message.final?'已收到最终分句，继续说话或点击停止':'豆包正在识别…')}
    else if(message.type==='done'){finishAsr(message.text||asrFinalText||asrCurrentText)}
    else if(message.type==='error'){failAsr(message.message||'服务端返回错误')}
